@@ -11,11 +11,15 @@ angular.module('travelografoApp', ['ngMap'])
 
     $scope.click = function(event) {
             console.log("Click on: " + event.latLng);
-            var marker = new google.maps.Marker({position: event.latLng, map: $scope.map});
+            // var marker = new google.maps.Marker({position: event.latLng, map: $scope.map});
             console.log("Makers: ", $scope.markers);
-            $scope.markers[$scope.markers.length] = event.latLng;
-            // $scope.map.setCenter(event.latLng);
+            $scope.markers[$scope.markers.length] = event.latLng.toString().replace('(', '[').replace(')', ']');;
         };
+
+    $scope.deleteMarker = function(event) {
+      var index = $scope.markers.indexOf(event.latLng.toString().replace('(', '[').replace(')', ']'));
+      $scope.markers.splice(index, 1);
+    }
 
     $scope.markers = [];
 });

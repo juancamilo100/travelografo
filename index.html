@@ -8,11 +8,15 @@
   <!-- <link rel='stylesheet' href='//fonts.googleapis.com/css?family=font1|font2|etc' type='text/css'>
   <link rel="stylesheet" href="stylesheet.css" type="text/css"> -->
   </head>
-  <body ng-app="travelografoApp">
+  <body ng-app="travelografoApp" ng-controller="mainCtrl" >
     <h1>Hello!!</h1>
-    <ng-map ng-controller="mainCtrl" center="41,-87" zoom="3" on-click="click()">
-      <!-- <custom-marker position="-25.363882, 131.044922" on-click="click()" title="Click to zoom"></custom-marker> -->
+    <ng-map  center="41,-87" zoom="3" on-click="click()">
+      <div ng-repeat="marker in markers">
+        <marker position={{marker}} title="drag me"
+          draggable="true" on-click="deleteMarker(marker.index)"></marker>
+      </div>
     </ng-map>
+
 
   <script src="vendor/angular.js" type="text/javascript"></script>
   <script src="scripts/app.js" type="text/javascript"></script>
