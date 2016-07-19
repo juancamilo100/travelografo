@@ -3,7 +3,9 @@ angular.module('travelografoApp', ['ngMap'])
 
         dataService.getMarkers(function(response) {
             var markers = response.data.markers;
-            $scope.markers = markers;
+            markers.forEach(function (marker, index) {
+              $scope.markers[index] = markers[index].latLng;
+            });
         });
 
         $scope.saveMarkers = function() {
@@ -21,6 +23,11 @@ angular.module('travelografoApp', ['ngMap'])
                 city: "",
                 state: "",
                 country: ""
+            }
+
+            var marker = {
+              id: ""
+              latLng: ""
             }
 
             var geocoder = new google.maps.Geocoder();
@@ -71,15 +78,10 @@ angular.module('travelografoApp', ['ngMap'])
             $scope.blogs.splice(index, 1);
         }
 
-        $scope.callbackFunc = function(param) {
-            console.log('I know where ' + param + ' are. ' + vm.message);
-            console.log('You are at' + vm.map.getCenter());
-        };
-
         $scope.markers = [];
         $scope.blogs = [];
     })
-    
+
     .service('dataService', function ($http, $q) {
 
       this.getMarkers = function(callback) {
