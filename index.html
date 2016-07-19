@@ -13,10 +13,11 @@
         <marker position={{marker}} title="drag me"
           draggable="true" on-click="deleteMarker(marker.index)"></marker>
       </div>
-      <div ng-repeat="blog in blogs">
-        <h1>{{blog.city}}</h1>
-      </div>
     </ng-map>
+
+    <div ng-repeat="blog in blogs">
+      <h1>{{blog.city}}</h1>
+    </div>
 
 
   <script src="vendor/angular.js" type="text/javascript"></script>
