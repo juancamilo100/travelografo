@@ -1,23 +1,31 @@
 angular.module('travelografoApp', ['ngMap'])
     .controller('mainCtrl', function(NgMap, $scope, dataService) {
 
-        dataService.getMarkers(function(response) {
-            var markers = response.data.markers;
-            markers.forEach(function (marker, index) {
-              $scope.markers[index] = markers[index].latLng;
+        function updateMarkersFromDatabase() {
+            dataService.getMarkers(function(response) {
+                var markers = response.data.markers;
+
+                var marker = {
+                    id: "",
+                    latLng: ""
+                }
+
+                markers.forEach(function(marker, index) {
+                    marker.id = markers[index]._id;
+                    marker.latLng = markers[index].latLng;
+                    $scope.markers[index] = marker;
+                });
             });
-        });
+        }
+
+        updateMarkersFromDatabase();
 
         $scope.saveMarkers = function() {
-          dataService.saveMarkers($scope.markers);
+            dataService.saveMarkers($scope.markers);
         };
 
-        console.log("NgMap: ", NgMap);
-        NgMap.getMap().then(function(map) {
-            $scope.map = map
-        });
-
-        $scope.click = function(event) {
+        function createBlog(event) {
+            console.log("Creating blog");
 
             var blog = {
                 city: "",
@@ -25,13 +33,7 @@ angular.module('travelografoApp', ['ngMap'])
                 country: ""
             }
 
-            var marker = {
-              id: ""
-              latLng: ""
-            }
-
             var geocoder = new google.maps.Geocoder();
-            $scope.markers[$scope.markers.length] = event.latLng.toString().replace('(', '[').replace(')', ']');
 
             geocoder.geocode({
                 'latLng': event.latLng
@@ -69,11 +71,36 @@ angular.module('travelografoApp', ['ngMap'])
                 } else {
                     console.log('Geocoder failed due to: ' + status);
                 }
-            });
+            })
+        };
+
+        function createMarker(event) {
+            console.log("Create Marker");
+            var marker = {
+                id: "",
+                latLng: ""
+            }
+
+            marker.latLng = event.latLng.toString().replace('(', '[').replace(')', ']');
+            $scope.markers[$scope.markers.length] = marker;
+            dataService.saveMarkers($scope.markers);
+            updateMarkersFromDatabase();
+        }
+
+        $scope.click = function(event) {
+            createMarker(event);
+            createBlog(event);
         };
 
         $scope.deleteMarker = function(event) {
-            var index = $scope.markers.indexOf(event.latLng.toString().replace('(', '[').replace(')', ']'));
+
+            var index = $scope.markers.map(function(marker) {
+                return marker.latLng;
+            }).indexOf(event.latLng.toString().replace('(', '[').replace(')', ']'));
+
+            dataService.deleteMarker($scope.markers[index], function(response) {
+                console.log("Marker Deleted: " + response.data);
+            })
             $scope.markers.splice(index, 1);
             $scope.blogs.splice(index, 1);
         }
@@ -82,33 +109,36 @@ angular.module('travelografoApp', ['ngMap'])
         $scope.blogs = [];
     })
 
-    .service('dataService', function ($http, $q) {
+.service('dataService', function($http, $q) {
 
-      this.getMarkers = function(callback) {
+    this.getMarkers = function(callback) {
         $http.get('/api/markers').then(callback);
-      };
+    };
 
-      this.deleteMarker = function(marker) {
-        console.log("I deleted the " + marker.name + " marker!");
-      };
+    this.deleteMarker = function(marker, callback) {
+        console.log("I deleted the " + marker.id + " marker!");
+        $http.delete('/api/markers/' + marker.id, marker).then(callback);
+    };
 
-      this.saveMarkers = function(markers) {
+    this.saveMarkers = function(markers) {
         var queue = [];
         markers.forEach(function(marker) {
             var request;
-            if(!marker._id) {
-              request = $http.post('/api/markers', marker);
+            if (marker.id == "") {
+                console.log("Saving new marker");
+                request = $http.post('/api/markers', marker);
             } else {
-              request = $http.put('/api/markers/' + marker._id, marker).then(function(result) {
-                marker = result.data.marker;
-                return marker;
-              });
+                console.log("Saving old marker");
+                request = $http.put('/api/markers/' + marker._id, marker).then(function(result) {
+                    marker = result.data.marker;
+                    return marker;
+                });
             }
             queue.push(request);
         });
         return $q.all(queue).then(function(results) {
-          console.log("I saved " + markers.length + " markers!");
+            console.log("I saved: " + results);
         });
-      };
+    };
 
-    });
+});

@@ -8,9 +8,9 @@
   </head>
   <body ng-app="travelografoApp" ng-controller="mainCtrl" >
     <h1>Hello!!</h1>
-    <ng-map  center="41,-87" zoom="3" on-click="click()">
+    <ng-map  center="41,-87" zoom="3" on-click="click(); createBlog();">
       <div ng-repeat="marker in markers">
-        <marker position={{marker}} title="drag me"
+        <marker position={{marker.latLng}} title="drag me"
           draggable="true" on-click="deleteMarker(marker.index)"></marker>
       </div>
     </ng-map>
