@@ -107,6 +107,25 @@ angular.module('travelografoApp', ['ngMap'])
 
         $scope.markers = [];
         $scope.blogs = [];
+
+        var markerToUpdateIndex = "";
+
+        $scope.dragStart = function(event) {
+          console.log("position: " + event);
+          // var index = $scope.markers.map(function(marker) {
+          //     return marker.latLng;
+          // }).indexOf(event.latLng.toString().replace('(', '[').replace(')', ']'));
+
+          // console.log("Marker to update is: " + markerToUpdateIndex);
+          // markerToUpdateIndex = index;
+        }
+
+        $scope.updateMarker = function(event) {
+          var newlatLng = event.latLng.toString().replace('(', '[').replace(')', ']');
+          console.log("Updating marker with index: " + markerToUpdateIndex);
+          $scope.markers[markerToUpdateIndex].latLng = newlatLng;
+          dataService.saveMarkers($scope.markers);
+        }
     })
 
 .service('dataService', function($http, $q) {
@@ -115,7 +134,6 @@ angular.module('travelografoApp', ['ngMap'])
     };
 
     this.deleteMarker = function(marker, callback) {
-        console.log("I deleted the " + marker.id + " marker!");
         $http.delete('/api/markers/' + marker.id, marker).then(callback);
     };
 
@@ -128,7 +146,7 @@ angular.module('travelografoApp', ['ngMap'])
                 request = $http.post('/api/markers', marker);
             } else {
                 console.log("Saving old marker");
-                request = $http.put('/api/markers/' + marker._id, marker).then(function(result) {
+                request = $http.put('/api/markers/' + marker.id, marker).then(function(result) {
                     marker = result.data.marker;
                     return marker;
                 });
@@ -139,4 +157,8 @@ angular.module('travelografoApp', ['ngMap'])
             console.log("I saved: " + results);
         });
     };
+
+    this.updateMarker - function(marker, callback) {
+      $http.put('/api/markers/' + marker.id, marker).then(callback);
+    }
 });

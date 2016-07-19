@@ -5,13 +5,19 @@
     <meta name="description" content="Simple Map">
     <meta name="keywords" content="ng-map,AngularJS,center">
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <link rel=“stylesheet” href=styles/main.css”>
   </head>
   <body ng-app="travelografoApp" ng-controller="mainCtrl" >
     <h1>Hello!!</h1>
     <ng-map  center="41,-87" zoom="3" on-click="click(); createBlog();">
       <div ng-repeat="marker in markers">
-        <marker position={{marker.latLng}} title="drag me"
-          draggable="true" on-click="deleteMarker(marker.index)"></marker>
+        <marker position={{marker.latLng}}
+          title="drag me"
+          draggable="true"
+          on-click="deleteMarker(marker.index)"
+          on-dragstart="dragStart(marker.index)">
+          <!-- on-dragend="updateMarker()"> -->
+        </marker>
       </div>
     </ng-map>
 
