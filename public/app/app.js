@@ -110,7 +110,6 @@ angular.module('travelografoApp', ['ngMap'])
     })
 
 .service('dataService', function($http, $q) {
-
     this.getMarkers = function(callback) {
         $http.get('/api/markers').then(callback);
     };
@@ -140,5 +139,4 @@ angular.module('travelografoApp', ['ngMap'])
             console.log("I saved: " + results);
         });
     };
-
 });

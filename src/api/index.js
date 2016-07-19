@@ -20,7 +20,6 @@ router.get('/markers', function(req, res) {
 
 router.post('/markers', function(req, res) {
     var marker = req.body;
-    console.log("Saving the marker");
     Marker.create({
         latLng: marker.latLng
     }, function(err, marker) {
