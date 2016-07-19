@@ -5,15 +5,16 @@
     <meta name="description" content="Simple Map">
     <meta name="keywords" content="ng-map,AngularJS,center">
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
-  <!-- <link rel='stylesheet' href='//fonts.googleapis.com/css?family=font1|font2|etc' type='text/css'>
-  <link rel="stylesheet" href="stylesheet.css" type="text/css"> -->
   </head>
   <body ng-app="travelografoApp" ng-controller="mainCtrl" >
     <h1>Hello!!</h1>
-    <ng-map  center="41,-87" zoom="3" on-click="click()">
+    <ng-map  center="41,-87" zoom="3" on-click="click()" geo-callback="callbackFunc('you')">
       <div ng-repeat="marker in markers">
         <marker position={{marker}} title="drag me"
           draggable="true" on-click="deleteMarker(marker.index)"></marker>
+      </div>
+      <div ng-repeat="blog in blogs">
+        <h1>{{blog.city}}</h1>
       </div>
     </ng-map>
 
