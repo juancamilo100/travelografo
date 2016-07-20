@@ -41,7 +41,7 @@ angular.module('travelografoApp', ['ngMap'])
             }
 
             var geocoder = new google.maps.Geocoder();
-            console.log("Coordinates: " + coordinates);
+            // console.log("Coordinates: " + coordinates);
             geocoder.geocode({
                 'latLng': coordinates
             }, function(results, status) {
@@ -57,24 +57,28 @@ angular.module('travelografoApp', ['ngMap'])
                             switch (dataType) {
                                 case "locality":
                                     blog.city = results[1].address_components[addressItem].long_name;
-                                    console.log("City: " + blog.city);
+                                    // console.log("City: " + blog.city);
                                     break;
 
                                 case "administrative_area_level_1":
                                     blog.state = results[1].address_components[addressItem].short_name;
-                                    console.log("State: " + blog.state);
+                                    // console.log("State: " + blog.state);
                                     break;
 
                                 case "country":
                                     blog.country = results[1].address_components[addressItem].long_name;
-                                    console.log("Country: " + blog.country);
+                                    // console.log("Country: " + blog.country);
                                     break;
 
                                 default:
                             }
                         }
-                        // console.log("Blog: " blog);
+                        // console.log("Blog: " + blog.city);
+                        if(blog.city == "") {
+                          blog.city = "City Not Found"
+                        }
                         $scope.blogs.push(blog);
+                        console.log("Blogs: " + $scope.blogs);
                     } else {
                         console.log('Location not found');
                     }
@@ -85,7 +89,7 @@ angular.module('travelografoApp', ['ngMap'])
         };
 
         function createMarker(event) {
-            console.log("Create Marker");
+            // console.log("Create Marker");
             var marker = {
                 id: "",
                 latLng: ""
@@ -149,7 +153,7 @@ angular.module('travelografoApp', ['ngMap'])
             queue.push(request);
         });
         return $q.all(queue).then(function(results) {
-            console.log("I saved: " + results);
+            // console.log("I saved: " + results);
         });
     };
 
