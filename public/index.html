@@ -5,26 +5,42 @@
     <meta name="description" content="Simple Map">
     <meta name="keywords" content="ng-map,AngularJS,center">
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
-    <link rel=“stylesheet” href=styles/main.css”>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <link rel="stylesheet" href="styles/main.css">
   </head>
-  <body ng-app="travelografoApp" ng-controller="mainCtrl" >
-    <h1>Hello!!</h1>
+  <body class="container" ng-app="travelografoApp" ng-controller="mainCtrl" >
+
+    <div class="row">
+      <h1 class="col-md-9">Travelografo</h1>
+      <ul class="nav nav-pills col-md-3" style="padding-top: 20px">
+        <li><a href="#">About</a></li>
+        <li><a href="#">Blogs</a></li>
+        <li><a href="#">Route</a></li>
+      </ul>
+    </div>
+
     <ng-map  center="41,-87" zoom="3" on-click="click(); createBlog();">
       <div ng-repeat="marker in markers">
         <marker position={{marker.latLng}}
           title="drag me"
           draggable="true"
-          on-click="deleteMarker(marker.index)"
-          on-dragstart="dragStart(marker.index)">
-          <!-- on-dragend="updateMarker()"> -->
+          on-dragend="updateMarker()"
+          data-index="{{$index}}"
+          on-click="deleteMarker()">
         </marker>
       </div>
     </ng-map>
 
-    <div ng-repeat="blog in blogs">
-      <h1>{{blog.city}}</h1>
+    <div style="padding-top: 20px">
+      <h2>Blogs:</h2>
+    </div>
+    <div class="row">
+      <div ng-repeat="blog in blogs" class="col-md-5 text-center">
+        <div class="blog"><a href="#">{{blog.city}}</a></div>
+      </div>
     </div>
 
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
     <script src="vendor/angular.js" type="text/javascript"></script>
     <script src="app/app.js" type="text/javascript"></script>
     <script src="app/ng-map.min.js"></script>
