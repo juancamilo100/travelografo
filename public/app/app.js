@@ -1,6 +1,14 @@
 angular.module('travelografoApp', ['ngMap'])
     .controller('mainCtrl', function(NgMap, $scope, dataService) {
 
+        function createBlogsFromDatabase() {
+           $scope.markers.forEach(function(marker) {
+            var coordinates = marker.latLng.toString().replace('[', '(').replace(']', ')');
+            console.log("maker coordinates: " + coordinates);
+             createBlog(coordinates);
+           })
+        };
+
         function updateMarkersFromDatabase() {
             dataService.getMarkers(function(response) {
                 var markers = response.data.markers;
@@ -14,7 +22,6 @@ angular.module('travelografoApp', ['ngMap'])
                     marker.id = markers[index]._id;
                     marker.latLng = markers[index].latLng;
                     $scope.markers[index] = marker;
-                    createBlog(marker.latLng);
                 });
             });
         }
@@ -25,8 +32,7 @@ angular.module('travelografoApp', ['ngMap'])
             dataService.saveMarkers($scope.markers);
         };
 
-
-        function createBlog(latLng) {
+        function createBlog(coordinates) {
             console.log("Creating blogs");
             var blog = {
                 city: "",
@@ -35,9 +41,9 @@ angular.module('travelografoApp', ['ngMap'])
             }
 
             var geocoder = new google.maps.Geocoder();
-
+            console.log("Coordinates: " + coordinates);
             geocoder.geocode({
-                'latLng': latLng
+                'latLng': coordinates
             }, function(results, status) {
                 if (status == google.maps.GeocoderStatus.OK) {
                     if (results[1]) {
@@ -67,8 +73,8 @@ angular.module('travelografoApp', ['ngMap'])
                                 default:
                             }
                         }
-
-                        $scope.blogs[$scope.blogs.length] = blog;
+                        // console.log("Blog: " blog);
+                        $scope.blogs.push(blog);
                     } else {
                         console.log('Location not found');
                     }
@@ -114,7 +120,7 @@ angular.module('travelografoApp', ['ngMap'])
 
         $scope.updateMarker = function(event) {
           var newlatLng = event.latLng.toString().replace('(', '[').replace(')', ']');
-          $scope.markers[this.index].latLng = newlatLng.toString();
+          $scope.markers[this.index].latLng = newlatLng;
           dataService.saveMarkers($scope.markers);
         }
     })
