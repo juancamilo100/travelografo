@@ -1,6 +1,14 @@
 angular.module('travelografoApp', ['ngMap'])
     .controller('mainCtrl', function(NgMap, $scope, dataService) {
 
+        function createBlogsFromDatabase() {
+           $scope.markers.forEach(function(marker) {
+            var coordinates = marker.latLng.toString().replace('[', '(').replace(']', ')');
+            console.log("maker coordinates: " + coordinates);
+             createBlog(coordinates);
+           })
+        };
+
         function updateMarkersFromDatabase() {
             dataService.getMarkers(function(response) {
                 var markers = response.data.markers;
@@ -24,9 +32,8 @@ angular.module('travelografoApp', ['ngMap'])
             dataService.saveMarkers($scope.markers);
         };
 
-        function createBlog(event) {
-            console.log("Creating blog");
-
+        function createBlog(coordinates) {
+            console.log("Creating blogs");
             var blog = {
                 city: "",
                 state: "",
@@ -34,9 +41,9 @@ angular.module('travelografoApp', ['ngMap'])
             }
 
             var geocoder = new google.maps.Geocoder();
-
+            // console.log("Coordinates: " + coordinates);
             geocoder.geocode({
-                'latLng': event.latLng
+                'latLng': coordinates
             }, function(results, status) {
                 if (status == google.maps.GeocoderStatus.OK) {
                     if (results[1]) {
@@ -50,21 +57,28 @@ angular.module('travelografoApp', ['ngMap'])
                             switch (dataType) {
                                 case "locality":
                                     blog.city = results[1].address_components[addressItem].long_name;
+                                    // console.log("City: " + blog.city);
                                     break;
 
                                 case "administrative_area_level_1":
                                     blog.state = results[1].address_components[addressItem].short_name;
+                                    // console.log("State: " + blog.state);
                                     break;
 
                                 case "country":
                                     blog.country = results[1].address_components[addressItem].long_name;
+                                    // console.log("Country: " + blog.country);
                                     break;
 
                                 default:
                             }
                         }
-
-                        $scope.blogs[$scope.blogs.length] = blog;
+                        // console.log("Blog: " + blog.city);
+                        if(blog.city == "") {
+                          blog.city = "City Not Found"
+                        }
+                        $scope.blogs.push(blog);
+                        console.log("Blogs: " + $scope.blogs);
                     } else {
                         console.log('Location not found');
                     }
@@ -75,7 +89,7 @@ angular.module('travelografoApp', ['ngMap'])
         };
 
         function createMarker(event) {
-            console.log("Create Marker");
+            // console.log("Create Marker");
             var marker = {
                 id: "",
                 latLng: ""
@@ -89,7 +103,7 @@ angular.module('travelografoApp', ['ngMap'])
 
         $scope.click = function(event) {
             createMarker(event);
-            createBlog(event);
+            createBlog(event.latLng);
         };
 
         $scope.deleteMarker = function(event) {
@@ -107,6 +121,12 @@ angular.module('travelografoApp', ['ngMap'])
 
         $scope.markers = [];
         $scope.blogs = [];
+
+        $scope.updateMarker = function(event) {
+          var newlatLng = event.latLng.toString().replace('(', '[').replace(')', ']');
+          $scope.markers[this.index].latLng = newlatLng;
+          dataService.saveMarkers($scope.markers);
+        }
     })
 
 .service('dataService', function($http, $q) {
@@ -115,7 +135,6 @@ angular.module('travelografoApp', ['ngMap'])
     };
 
     this.deleteMarker = function(marker, callback) {
-        console.log("I deleted the " + marker.id + " marker!");
         $http.delete('/api/markers/' + marker.id, marker).then(callback);
     };
 
@@ -124,11 +143,9 @@ angular.module('travelografoApp', ['ngMap'])
         markers.forEach(function(marker) {
             var request;
             if (marker.id == "") {
-                console.log("Saving new marker");
                 request = $http.post('/api/markers', marker);
             } else {
-                console.log("Saving old marker");
-                request = $http.put('/api/markers/' + marker._id, marker).then(function(result) {
+                request = $http.put('/api/markers/' + marker.id, marker).then(function(result) {
                     marker = result.data.marker;
                     return marker;
                 });
@@ -136,7 +153,11 @@ angular.module('travelografoApp', ['ngMap'])
             queue.push(request);
         });
         return $q.all(queue).then(function(results) {
-            console.log("I saved: " + results);
+            // console.log("I saved: " + results);
         });
     };
+
+    this.updateMarker - function(marker, callback) {
+      $http.put('/api/markers/' + marker.id, marker).then(callback);
+    }
 });
