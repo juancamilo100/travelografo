@@ -19,14 +19,14 @@
       </ul>
     </div>
 
-    <ng-map  center="41,-87" zoom="3" on-click="click(); createBlog();">
+    <ng-map  center="41,-87" zoom="3" on-click="click()">
       <div ng-repeat="marker in markers">
         <marker position={{marker.latLng}}
           title="drag me"
           draggable="true"
           on-dragend="updateMarker()"
           data-index="{{$index}}"
-          on-click="deleteMarker()">
+          on-click="deleteMarkerAndBlog()">
         </marker>
       </div>
     </ng-map>
@@ -34,7 +34,7 @@
     <div style="padding-top: 20px">
       <h2>Blogs:</h2>
     </div>
-    
+
     <div class="row">
       <div ng-repeat="blog in blogs" class="col-md-5 text-center">
         <div class="blog"><a href="#">{{blog.city}}</a></div>

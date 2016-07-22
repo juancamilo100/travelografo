@@ -1,16 +1,16 @@
 angular.module('travelografoApp', ['ngMap'])
-    .controller('mainCtrl', function(NgMap, $scope, dataService) {
+    .controller('mainCtrl', function(NgMap, $scope, markerDataService, blogDataService) {
 
         function createBlogsFromDatabase() {
-           $scope.markers.forEach(function(marker) {
-            var coordinates = marker.latLng.toString().replace('[', '(').replace(']', ')');
-            console.log("maker coordinates: " + coordinates);
-             createBlog(coordinates);
-           })
+            $scope.markers.forEach(function(marker) {
+                var coordinates = marker.latLng.toString().replace('[', '(').replace(']', ')');
+                console.log("typeof coordinates from database: " + (typeof coordinates));
+                createBlog(coordinates);
+            })
         };
 
         function updateMarkersFromDatabase() {
-            dataService.getMarkers(function(response) {
+            markerDataService.getMarkers(function(response) {
                 var markers = response.data.markers;
 
                 var marker = {
@@ -23,25 +23,53 @@ angular.module('travelografoApp', ['ngMap'])
                     marker.latLng = markers[index].latLng;
                     $scope.markers[index] = marker;
                 });
+                // createBlogsFromDatabase();
+            });
+        }
+
+        function updateBlogsFromDatabase() {
+            blogDataService.getBlogs(function(response) {
+                var blogs = response.data.blogs;
+
+                var blog = {
+                    id: "",
+                    city: "",
+                    state: "",
+                    country: "",
+                    title: "",
+                    body: ""
+                }
+
+                blogs.forEach(function(blog, index) {
+                    blog.id = blogs[index]._id;
+                    blog.city = blogs[index].city;
+                    blog.state = blogs[index].state;
+                    blog.country = blogs[index].country;
+                    blog.title = blogs[index].title;
+                    blog.body = blogs[index].body;
+
+                    $scope.blogs[index] = blog;
+                });
+                // createBlogsFromDatabase();
             });
         }
 
         updateMarkersFromDatabase();
+        updateBlogsFromDatabase();
 
         $scope.saveMarkers = function() {
-            dataService.saveMarkers($scope.markers);
+            markerDataService.saveMarkers($scope.markers);
         };
 
-        function createBlog(coordinates) {
-            console.log("Creating blogs");
-            var blog = {
+        function getLocationDetails(coordinates, callback) {
+            var locationDetails = {
                 city: "",
                 state: "",
                 country: ""
             }
 
             var geocoder = new google.maps.Geocoder();
-            // console.log("Coordinates: " + coordinates);
+
             geocoder.geocode({
                 'latLng': coordinates
             }, function(results, status) {
@@ -56,29 +84,24 @@ angular.module('travelografoApp', ['ngMap'])
 
                             switch (dataType) {
                                 case "locality":
-                                    blog.city = results[1].address_components[addressItem].long_name;
-                                    // console.log("City: " + blog.city);
+                                    locationDetails.city = results[1].address_components[addressItem].long_name;
                                     break;
 
                                 case "administrative_area_level_1":
-                                    blog.state = results[1].address_components[addressItem].short_name;
-                                    // console.log("State: " + blog.state);
+                                    locationDetails.state = results[1].address_components[addressItem].short_name;
                                     break;
 
                                 case "country":
-                                    blog.country = results[1].address_components[addressItem].long_name;
-                                    // console.log("Country: " + blog.country);
+                                    locationDetails.country = results[1].address_components[addressItem].long_name;
                                     break;
 
                                 default:
                             }
                         }
-                        // console.log("Blog: " + blog.city);
-                        if(blog.city == "") {
-                          blog.city = "City Not Found"
+                        if (locationDetails.city == "") {
+                            locationDetails.city = "City Not Found"
                         }
-                        $scope.blogs.push(blog);
-                        console.log("Blogs: " + $scope.blogs);
+                        callback(locationDetails);
                     } else {
                         console.log('Location not found');
                     }
@@ -86,6 +109,27 @@ angular.module('travelografoApp', ['ngMap'])
                     console.log('Geocoder failed due to: ' + status);
                 }
             })
+        }
+
+        function createBlog(coordinates) {
+            getLocationDetails(coordinates, function(locationDetails) {
+                var blog = {
+                    id: "",
+                    city: "",
+                    state: "",
+                    country: "",
+                    title: "",
+                    body: ""
+                }
+
+                blog.city = locationDetails.city;
+                blog.state = locationDetails.state;
+                blog.country = locationDetails.country;
+
+                $scope.blogs.push(blog);
+                blogDataService.saveBlogs($scope.blogs);
+                updateBlogsFromDatabase();
+            });
         };
 
         function createMarker(event) {
@@ -97,7 +141,7 @@ angular.module('travelografoApp', ['ngMap'])
 
             marker.latLng = event.latLng.toString().replace('(', '[').replace(')', ']');
             $scope.markers[$scope.markers.length] = marker;
-            dataService.saveMarkers($scope.markers);
+            markerDataService.saveMarkers($scope.markers);
             updateMarkersFromDatabase();
         }
 
@@ -106,30 +150,40 @@ angular.module('travelografoApp', ['ngMap'])
             createBlog(event.latLng);
         };
 
-        $scope.deleteMarker = function(event) {
-
-            var index = $scope.markers.map(function(marker) {
-                return marker.latLng;
-            }).indexOf(event.latLng.toString().replace('(', '[').replace(')', ']'));
-
-            dataService.deleteMarker($scope.markers[index], function(response) {
+        $scope.deleteMarkerAndBlog = function(event) {
+            markerDataService.deleteMarker($scope.markers[this.index], function(response) {
                 console.log("Marker Deleted: " + response.data);
             })
-            $scope.markers.splice(index, 1);
-            $scope.blogs.splice(index, 1);
+
+            blogDataService.deleteBlog($scope.blogs[this.index], function(response) {
+                console.log("Blog Deleted: " + response.data);
+            })
+            $scope.markers.splice(this.index, 1);
+            $scope.blogs.splice(this.index, 1);
         }
 
         $scope.markers = [];
         $scope.blogs = [];
 
         $scope.updateMarker = function(event) {
-          var newlatLng = event.latLng.toString().replace('(', '[').replace(')', ']');
-          $scope.markers[this.index].latLng = newlatLng;
-          dataService.saveMarkers($scope.markers);
+            var newlatLng = event.latLng.toString().replace('(', '[').replace(')', ']');
+            var index = this.index;
+            $scope.markers[index].latLng = newlatLng;
+            markerDataService.saveMarkers($scope.markers);
+            updateMarkersFromDatabase();
+
+            getLocationDetails(event.latLng, function(locationDetails) {
+                $scope.blogs[index].city = locationDetails.city;
+                $scope.blogs[index].state = locationDetails.state;
+                $scope.blogs[index].country = locationDetails.country;
+
+                blogDataService.saveBlogs($scope.blogs);
+                updateBlogsFromDatabase();
+            });
         }
     })
 
-.service('dataService', function($http, $q) {
+.service('markerDataService', function($http, $q) {
     this.getMarkers = function(callback) {
         $http.get('/api/markers').then(callback);
     };
@@ -158,6 +212,39 @@ angular.module('travelografoApp', ['ngMap'])
     };
 
     this.updateMarker - function(marker, callback) {
-      $http.put('/api/markers/' + marker.id, marker).then(callback);
+        $http.put('/api/markers/' + marker.id, marker).then(callback);
+    }
+})
+
+.service('blogDataService', function($http, $q) {
+    this.getBlogs = function(callback) {
+        $http.get('/api/blogs').then(callback);
+    };
+
+    this.deleteBlog = function(blog, callback) {
+        $http.delete('/api/blogs/' + blog.id, blog).then(callback);
+    };
+
+    this.saveBlogs = function(blogs) {
+        var queue = [];
+        blogs.forEach(function(blog) {
+            var request;
+            if (blog.id == "") {
+                request = $http.post('/api/blogs', blog);
+                console.log("Creating new blog");
+            } else {
+                request = $http.put('/api/blogs/' + blog.id, blog).then(function(result) {
+                    blog = result.data.blog;
+                    console.log("Updated current blog");
+                    return blog;
+                });
+            }
+            queue.push(request);
+        });
+        return $q.all(queue).then(function(results) {});
+    };
+
+    this.updateBlog - function(blog, callback) {
+        $http.put('/api/blogs/' + blog.id, blog).then(callback);
     }
 });
