@@ -61,90 +61,76 @@ angular.module('travelografoApp', ['ngMap'])
             markerDataService.saveMarkers($scope.markers);
         };
 
-        function getLocationDetails(coordinates) {
-          var locationDetails = {
-              city: "",
-              state: "",
-              country: ""
-          }
+        function getLocationDetails(coordinates, callback) {
+            var locationDetails = {
+                city: "",
+                state: "",
+                country: ""
+            }
 
-          var geocoder = new google.maps.Geocoder();
+            var geocoder = new google.maps.Geocoder();
 
-          geocoder.geocode({
-              'latLng': coordinates
-          }, function(results, status) {
-              if (status == google.maps.GeocoderStatus.OK) {
-                  if (results[1]) {
+            geocoder.geocode({
+                'latLng': coordinates
+            }, function(results, status) {
+                if (status == google.maps.GeocoderStatus.OK) {
+                    if (results[1]) {
 
-                      var city = "";
-                      var state = "";
-                      var country = "";
-                      for (var addressItem in results[1].address_components) {
-                          var dataType = results[1].address_components[addressItem].types[0]
+                        var city = "";
+                        var state = "";
+                        var country = "";
+                        for (var addressItem in results[1].address_components) {
+                            var dataType = results[1].address_components[addressItem].types[0]
 
-                          switch (dataType) {
-                              case "locality":
-                                  locationDetails.city = results[1].address_components[addressItem].long_name;
-                                  break;
+                            switch (dataType) {
+                                case "locality":
+                                    locationDetails.city = results[1].address_components[addressItem].long_name;
+                                    break;
 
-                              case "administrative_area_level_1":
-                                  locationDetails.state = results[1].address_components[addressItem].short_name;
-                                  break;
+                                case "administrative_area_level_1":
+                                    locationDetails.state = results[1].address_components[addressItem].short_name;
+                                    break;
 
-                              case "country":
-                                  locationDetails.country = results[1].address_components[addressItem].long_name;
-                                  break;
+                                case "country":
+                                    locationDetails.country = results[1].address_components[addressItem].long_name;
+                                    break;
 
-                              default:
-                          }
-                      }
-                      if (locationDetails.city == "") {
-                          locationDetails.city = "City Not Found"
-                      }
-
-                      return locationDetails;
-                  } else {
-                      console.log('Location not found');
-                  }
-              } else {
-                  console.log('Geocoder failed due to: ' + status);
-              }
-          })
+                                default:
+                            }
+                        }
+                        if (locationDetails.city == "") {
+                            locationDetails.city = "City Not Found"
+                        }
+                        callback(locationDetails);
+                    } else {
+                        console.log('Location not found');
+                    }
+                } else {
+                    console.log('Geocoder failed due to: ' + status);
+                }
+            })
         }
 
         function createBlog(coordinates) {
-            var locationDetails = getLocationDetails(coordinates);
+            getLocationDetails(coordinates, function(locationDetails) {
+                var blog = {
+                    id: "",
+                    city: "",
+                    state: "",
+                    country: "",
+                    title: "",
+                    body: ""
+                }
 
-            var blog = {
-                id: "",
-                city: "",
-                state: "",
-                country: "",
-                title: "",
-                body: ""
-            }
+                blog.city = locationDetails.city;
+                blog.state = locationDetails.state;
+                blog.country = locationDetails.country;
 
-            blog.city = locationDetails.city;
-            blog.state = locationDetails.state;
-            blog.country = locationDetails.country;
-
-            $scope.blogs.push(blog);
-            blogDataService.saveBlogs($scope.blogs);
-            updateBlogsFromDatabase();
+                $scope.blogs.push(blog);
+                blogDataService.saveBlogs($scope.blogs);
+                updateBlogsFromDatabase();
+            });
         };
-
-        $scope.deleteBlog = function(event) {
-
-            var index = $scope.markers.map(function(marker) {
-                return marker.latLng;
-            }).indexOf(event.latLng.toString().replace('(', '[').replace(')', ']'));
-
-            markerDataService.deleteMarker($scope.markers[index], function(response) {
-                console.log("Marker Deleted: " + response.data);
-            })
-            $scope.markers.splice(index, 1);
-            $scope.blogs.splice(index, 1);
-        }
 
         function createMarker(event) {
             // console.log("Create Marker");
@@ -181,16 +167,19 @@ angular.module('travelografoApp', ['ngMap'])
 
         $scope.updateMarker = function(event) {
             var newlatLng = event.latLng.toString().replace('(', '[').replace(')', ']');
-            var newLocation = getLocationDetails(event.latLng);
-
-            $scope.markers[this.index].latLng = newlatLng;
-
-            $scope.blogs[this.index].city = newLocation.city;
-            $scope.blogs[this.index].state = newLocation.state;
-            $scope.blogs[this.index].country = newLocation.country;
-
+            var index = this.index;
+            $scope.markers[index].latLng = newlatLng;
             markerDataService.saveMarkers($scope.markers);
-            blogDataService.saveBlogs($scope.blogs);
+            updateMarkersFromDatabase();
+
+            getLocationDetails(event.latLng, function(locationDetails) {
+                $scope.blogs[index].city = locationDetails.city;
+                $scope.blogs[index].state = locationDetails.state;
+                $scope.blogs[index].country = locationDetails.country;
+
+                blogDataService.saveBlogs($scope.blogs);
+                updateBlogsFromDatabase();
+            });
         }
     })
 
