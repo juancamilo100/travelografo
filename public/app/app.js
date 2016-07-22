@@ -61,8 +61,60 @@ angular.module('travelografoApp', ['ngMap'])
             markerDataService.saveMarkers($scope.markers);
         };
 
+        function getLocationDetails(coordinates) {
+          var locationDetails = {
+              city: "",
+              state: "",
+              country: ""
+          }
+
+          var geocoder = new google.maps.Geocoder();
+
+          geocoder.geocode({
+              'latLng': coordinates
+          }, function(results, status) {
+              if (status == google.maps.GeocoderStatus.OK) {
+                  if (results[1]) {
+
+                      var city = "";
+                      var state = "";
+                      var country = "";
+                      for (var addressItem in results[1].address_components) {
+                          var dataType = results[1].address_components[addressItem].types[0]
+
+                          switch (dataType) {
+                              case "locality":
+                                  locationDetails.city = results[1].address_components[addressItem].long_name;
+                                  break;
+
+                              case "administrative_area_level_1":
+                                  locationDetails.state = results[1].address_components[addressItem].short_name;
+                                  break;
+
+                              case "country":
+                                  locationDetails.country = results[1].address_components[addressItem].long_name;
+                                  break;
+
+                              default:
+                          }
+                      }
+                      if (locationDetails.city == "") {
+                          locationDetails.city = "City Not Found"
+                      }
+
+                      return locationDetails;
+                  } else {
+                      console.log('Location not found');
+                  }
+              } else {
+                  console.log('Geocoder failed due to: ' + status);
+              }
+          })
+        }
+
         function createBlog(coordinates) {
-            console.log("Creating blogs");
+            var locationDetails = getLocationDetails(coordinates);
+
             var blog = {
                 id: "",
                 city: "",
@@ -72,53 +124,13 @@ angular.module('travelografoApp', ['ngMap'])
                 body: ""
             }
 
-            var geocoder = new google.maps.Geocoder();
-            // console.log("Coordinates: " + coordinates);
-            geocoder.geocode({
-                'latLng': coordinates
-            }, function(results, status) {
-                if (status == google.maps.GeocoderStatus.OK) {
-                    if (results[1]) {
+            blog.city = locationDetails.city;
+            blog.state = locationDetails.state;
+            blog.country = locationDetails.country;
 
-                        var city = "";
-                        var state = "";
-                        var country = "";
-                        for (var addressItem in results[1].address_components) {
-                            var dataType = results[1].address_components[addressItem].types[0]
-
-                            switch (dataType) {
-                                case "locality":
-                                    blog.city = results[1].address_components[addressItem].long_name;
-                                    // console.log("City: " + blog.city);
-                                    break;
-
-                                case "administrative_area_level_1":
-                                    blog.state = results[1].address_components[addressItem].short_name;
-                                    // console.log("State: " + blog.state);
-                                    break;
-
-                                case "country":
-                                    blog.country = results[1].address_components[addressItem].long_name;
-                                    // console.log("Country: " + blog.country);
-                                    break;
-
-                                default:
-                            }
-                        }
-                        if (blog.city == "") {
-                            blog.city = "City Not Found"
-                        }
-
-                        $scope.blogs.push(blog);
-                        blogDataService.saveBlogs($scope.blogs);
-                        updateBlogsFromDatabase();
-                    } else {
-                        console.log('Location not found');
-                    }
-                } else {
-                    console.log('Geocoder failed due to: ' + status);
-                }
-            })
+            $scope.blogs.push(blog);
+            blogDataService.saveBlogs($scope.blogs);
+            updateBlogsFromDatabase();
         };
 
         $scope.deleteBlog = function(event) {
@@ -169,8 +181,16 @@ angular.module('travelografoApp', ['ngMap'])
 
         $scope.updateMarker = function(event) {
             var newlatLng = event.latLng.toString().replace('(', '[').replace(')', ']');
+            var newLocation = getLocationDetails(event.latLng);
+
             $scope.markers[this.index].latLng = newlatLng;
+
+            $scope.blogs[this.index].city = newLocation.city;
+            $scope.blogs[this.index].state = newLocation.state;
+            $scope.blogs[this.index].country = newLocation.country;
+
             markerDataService.saveMarkers($scope.markers);
+            blogDataService.saveBlogs($scope.blogs);
         }
     })
 
