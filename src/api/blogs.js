@@ -6,7 +6,7 @@ var Blog = require('../models/blog');
 var router = express.Router();
 
 router.get('/blogs', function(req, res) {
-  console.log("Saving blogs");
+
     Blog.find({}, function(err, blogs) {
         if (err) {
             return res.status(500).json({
@@ -20,7 +20,6 @@ router.get('/blogs', function(req, res) {
 });
 
 router.post('/blogs', function(req, res) {
-    console.log("Saving blogs");
     var blog = req.body;
     Blog.create({
         city: blog.city,
@@ -43,7 +42,7 @@ router.post('/blogs', function(req, res) {
 router.put('/blogs/:id', function(req, res) {
     var id = req.params.id;
     var blog = req.body;
-    console.log("Updating Blogs lower layer");
+
     if (blog && blog._id !== id) {
         return res.status(500).json({
             err: "Ids don't match!"

@@ -28,6 +28,7 @@ router.post('/markers', function(req, res) {
                 err: err.message
             });
         }
+
         res.json({
             'marker': marker,
             message: 'Marker Created'
