@@ -10,6 +10,7 @@ var app = express();
 require('./database');
 
 app.use('/', express.static('../public'));
+app.use('/', express.static('../public/templates'));
 app.use(parser.json());
 
 app.use('/api', markerRouter);
