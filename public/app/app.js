@@ -4,7 +4,6 @@ angular.module('travelografoApp', ['ngMap'])
         function createBlogsFromDatabase() {
             $scope.markers.forEach(function(marker) {
                 var coordinates = marker.latLng.toString().replace('[', '(').replace(']', ')');
-                console.log("typeof coordinates from database: " + (typeof coordinates));
                 createBlog(coordinates);
             })
         };
@@ -133,7 +132,6 @@ angular.module('travelografoApp', ['ngMap'])
         };
 
         function createMarker(event) {
-            // console.log("Create Marker");
             var marker = {
                 id: "",
                 latLng: ""
@@ -145,21 +143,37 @@ angular.module('travelografoApp', ['ngMap'])
             updateMarkersFromDatabase();
         }
 
+        $scope.deleteAllBlogsAndMarkers = function(event) {
+
+          for(var index = 0; index < $scope.blogs.length; index++) {
+              markerDataService.deleteMarker($scope.markers[index], function(response) {
+                  $scope.markers.splice(0, $scope.markers.length);
+              })
+
+              blogDataService.deleteBlog($scope.blogs[index], function(response) {
+                  $scope.blogs.splice(0, $scope.blogs.length)
+              })
+          }
+        }
+
         $scope.click = function(event) {
             createMarker(event);
             createBlog(event.latLng);
         };
 
         $scope.deleteMarkerAndBlog = function(event) {
+
             markerDataService.deleteMarker($scope.markers[this.index], function(response) {
-                console.log("Marker Deleted: " + response.data);
+                //console.log("Marker Deleted: " + response.data);
+                $scope.markers.splice(this.index, 1);
+                updateMarkersFromDatabase();
             })
 
             blogDataService.deleteBlog($scope.blogs[this.index], function(response) {
-                console.log("Blog Deleted: " + response.data);
+                //console.log("Blog Deleted: " + response.data);
+                $scope.blogs.splice(this.index, 1);
+                updateBlogsFromDatabase();
             })
-            $scope.markers.splice(this.index, 1);
-            $scope.blogs.splice(this.index, 1);
         }
 
         $scope.markers = [];
@@ -222,6 +236,7 @@ angular.module('travelografoApp', ['ngMap'])
     };
 
     this.deleteBlog = function(blog, callback) {
+        console.log("Blog ID: " + blog.id);
         $http.delete('/api/blogs/' + blog.id, blog).then(callback);
     };
 
@@ -231,11 +246,9 @@ angular.module('travelografoApp', ['ngMap'])
             var request;
             if (blog.id == "") {
                 request = $http.post('/api/blogs', blog);
-                console.log("Creating new blog");
             } else {
                 request = $http.put('/api/blogs/' + blog.id, blog).then(function(result) {
                     blog = result.data.blog;
-                    console.log("Updated current blog");
                     return blog;
                 });
             }
