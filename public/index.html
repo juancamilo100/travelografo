@@ -31,13 +31,15 @@
       </div>
     </ng-map>
 
+    <button style="margin-top: 10px"type="button" class="btn btn-primary center-block" ng-click="deleteAllBlogsAndMarkers()">Clear Map</button>
+
     <div style="padding-top: 20px">
       <h2>Blogs:</h2>
     </div>
 
     <div class="row">
       <div ng-repeat="blog in blogs" class="col-md-5 text-center">
-        <div class="blog"><a href="#">{{blog.city}}</a></div>
+        <div class="blog"><a href="templates/blogTemplate.html">{{$index + 1}}. {{blog.city}}</a></div>
       </div>
     </div>
 
