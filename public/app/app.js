@@ -1,5 +1,21 @@
 angular.module('travelografoApp', ['ngMap'])
-    .controller('mainCtrl', function(NgMap, $scope, markerDataService, blogDataService) {
+    .controller('mainCtrl', function(NgMap, $scope, markerDataService, blogDataService, configService) {
+
+        $scope.markers = [];
+        $scope.blogs = [];
+        $scope.configuration = {};
+
+        configService.getConfigData(function(response) {
+            console.log("Here is the configuration data!!!");
+            console.log(response.data.googleMapsApiKey);
+            $scope.configuration.googleApiURL = response.data.googleMapsApiKey;
+            // var body = document.getElementsByTagName('body');
+            // document.body.append("<script src='http://maps.google.com/maps/api/js'></script>");
+
+            // var script = document.createElement('script');
+            // script.src = "http://maps.google.com/maps/api/js";
+            // document.getElementsByTagName('head')[0].appendChild(script);
+        })
 
         function createBlogsFromDatabase() {
             $scope.markers.forEach(function(marker) {
@@ -59,6 +75,8 @@ angular.module('travelografoApp', ['ngMap'])
         $scope.saveMarkers = function() {
             markerDataService.saveMarkers($scope.markers);
         };
+
+
 
         function getLocationDetails(coordinates, callback) {
             var locationDetails = {
@@ -145,15 +163,15 @@ angular.module('travelografoApp', ['ngMap'])
 
         $scope.deleteAllBlogsAndMarkers = function(event) {
 
-          for(var index = 0; index < $scope.blogs.length; index++) {
-              markerDataService.deleteMarker($scope.markers[index], function(response) {
-                  $scope.markers.splice(0, $scope.markers.length);
-              })
+            for (var index = 0; index < $scope.blogs.length; index++) {
+                markerDataService.deleteMarker($scope.markers[index], function(response) {
+                    $scope.markers.splice(0, $scope.markers.length);
+                })
 
-              blogDataService.deleteBlog($scope.blogs[index], function(response) {
-                  $scope.blogs.splice(0, $scope.blogs.length)
-              })
-          }
+                blogDataService.deleteBlog($scope.blogs[index], function(response) {
+                    $scope.blogs.splice(0, $scope.blogs.length)
+                })
+            }
         }
 
         $scope.click = function(event) {
@@ -176,8 +194,7 @@ angular.module('travelografoApp', ['ngMap'])
             })
         }
 
-        $scope.markers = [];
-        $scope.blogs = [];
+
 
         $scope.updateMarker = function(event) {
             var newlatLng = event.latLng.toString().replace('(', '[').replace(')', ']');
@@ -231,33 +248,38 @@ angular.module('travelografoApp', ['ngMap'])
 })
 
 .service('blogDataService', function($http, $q) {
-    this.getBlogs = function(callback) {
-        $http.get('/api/blogs').then(callback);
-    };
+        this.getBlogs = function(callback) {
+            $http.get('/api/blogs').then(callback);
+        };
 
-    this.deleteBlog = function(blog, callback) {
-        console.log("Blog ID: " + blog.id);
-        $http.delete('/api/blogs/' + blog.id, blog).then(callback);
-    };
+        this.deleteBlog = function(blog, callback) {
+            console.log("Blog ID: " + blog.id);
+            $http.delete('/api/blogs/' + blog.id, blog).then(callback);
+        };
 
-    this.saveBlogs = function(blogs) {
-        var queue = [];
-        blogs.forEach(function(blog) {
-            var request;
-            if (blog.id == "") {
-                request = $http.post('/api/blogs', blog);
-            } else {
-                request = $http.put('/api/blogs/' + blog.id, blog).then(function(result) {
-                    blog = result.data.blog;
-                    return blog;
-                });
-            }
-            queue.push(request);
-        });
-        return $q.all(queue).then(function(results) {});
-    };
+        this.saveBlogs = function(blogs) {
+            var queue = [];
+            blogs.forEach(function(blog) {
+                var request;
+                if (blog.id == "") {
+                    request = $http.post('/api/blogs', blog);
+                } else {
+                    request = $http.put('/api/blogs/' + blog.id, blog).then(function(result) {
+                        blog = result.data.blog;
+                        return blog;
+                    });
+                }
+                queue.push(request);
+            });
+            return $q.all(queue).then(function(results) {});
+        };
 
-    this.updateBlog - function(blog, callback) {
-        $http.put('/api/blogs/' + blog.id, blog).then(callback);
-    }
-});
+        this.updateBlog - function(blog, callback) {
+            $http.put('/api/blogs/' + blog.id, blog).then(callback);
+        }
+    })
+    .service('configService', function($http, $q) {
+        this.getConfigData = function(callback) {
+            $http.get('/api/config/').then(callback);
+        };
+    });
