@@ -1,4 +1,17 @@
-angular.module('travelografoApp', ['ngMap'])
+angular.module('travelografoApp', ['ngMap', 'ngRoute'])
+    .config(function($routeProvider, $locationProvider) {
+        $routeProvider
+            .when('/page1', {
+                templateUrl : '/templates/page1.html',
+                controller  : 'mainCtrl'
+            })
+            .when('/page2', {
+                templateUrl : '/templates/page2.html',
+                controller  : 'mainCtrl'
+            })
+
+            $locationProvider.html5Mode({enabled: true, requireBase: false});
+          })
     .controller('mainCtrl', function(NgMap, $scope, markerDataService, blogDataService) {
 
         function createBlogsFromDatabase() {
